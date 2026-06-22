@@ -1,3 +1,4 @@
+require('dotenv').config();
 var createError = require('http-errors');
 var express = require('express');
 const fs = require('fs');
@@ -26,7 +27,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const dbUrl = 'mongodb://localhost:27017/exercise20-cookies';
+const dbUrl = process.env.MONGO_URI;
 mongoose.connect(dbUrl)
   .then(() => console.log('Connected to MongoDB successfully!'))
   .catch((err) => console.error('Database connection error:', err));
