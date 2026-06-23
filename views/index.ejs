@@ -1,11 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %></title>
   <link rel='stylesheet' href='/stylesheets/style.css' />
 </head>
 <body>
-  <h1><%= title %></h1>
-  <p>Use POST /users/signup or /users/login to receive an authentication cookie, then GET /articles.</p>
+  <div class="container">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('login')">Login</div>
+      <div class="tab" onclick="switchTab('signup')">Sign Up</div>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-section" class="form-section active">
+      <form id="login-form" action="/users/login" method="POST">
+        <div class="form-group">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" name="username" required placeholder="Enter your username">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" name="password" required placeholder="Enter your password">
+        </div>
+        <button type="submit">Log In</button>
+      </form>
+    </div>
+
+    <!-- Signup Form -->
+    <div id="signup-section" class="form-section">
+      <form id="signup-form" action="/users/signup" method="POST">
+        <div class="form-group">
+          <label for="signup-username">Username</label>
+          <input type="text" id="signup-username" name="username" required placeholder="Choose a username">
+        </div>
+        <div class="form-group">
+          <label for="signup-password">Password</label>
+          <input type="password" id="signup-password" name="password" required placeholder="Create a password">
+        </div>
+        <button type="submit">Sign Up</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      const tabs = document.querySelectorAll('.tab');
+      const loginSection = document.getElementById('login-section');
+      const signupSection = document.getElementById('signup-section');
+
+      tabs.forEach(t => t.classList.remove('active'));
+
+      if (tab === 'login') {
+        tabs[0].classList.add('active');
+        loginSection.classList.add('active');
+        signupSection.classList.remove('active');
+      } else {
+        tabs[1].classList.add('active');
+        signupSection.classList.add('active');
+        loginSection.classList.remove('active');
+      }
+    }
+  </script>
 </body>
 </html>
