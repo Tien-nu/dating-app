@@ -1,67 +1,269 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %></title>
   <link rel='stylesheet' href='/stylesheets/style.css' />
 </head>
 <body>
-  <div class="container">
-    <div class="tabs">
-      <div class="tab active" onclick="switchTab('login')">Login</div>
-      <div class="tab" onclick="switchTab('signup')">Sign Up</div>
-    </div>
+  <h1>Frontend</h1>
+  <div id="status">Not logged in.</div>
+  <button onclick="logout()">Logout</button>
+  
+  <hr/>
+  <h2>Users</h2>
+  <h3>Signup</h3>
+  <form id="signupForm">
+    Username: <input type="text" name="username" required>
+    Password: <input type="password" name="password" required>
+    <button type="submit">Signup</button>
+  </form>
+  <h3>Login</h3>
+  <form id="loginForm">
+    Username: <input type="text" name="username" required>
+    Password: <input type="password" name="password" required>
+    <button type="submit">Login</button>
+  </form>
 
-    <!-- Login Form -->
-    <div id="login-section" class="form-section active">
-      <form id="login-form" action="/users/login" method="POST">
-        <div class="form-group">
-          <label for="login-username">Username</label>
-          <input type="text" id="login-username" name="username" required placeholder="Enter your username">
-        </div>
-        <div class="form-group">
-          <label for="login-password">Password</label>
-          <input type="password" id="login-password" name="password" required placeholder="Enter your password">
-        </div>
-        <button type="submit">Log In</button>
-      </form>
-    </div>
+  <hr/>
+  <h2>Articles</h2>
+  <button onclick="fetchArticles()">Fetch Articles</button>
+  <div id="articlesList"></div>
 
-    <!-- Signup Form -->
-    <div id="signup-section" class="form-section">
-      <form id="signup-form" action="/users/signup" method="POST">
-        <div class="form-group">
-          <label for="signup-username">Username</label>
-          <input type="text" id="signup-username" name="username" required placeholder="Choose a username">
-        </div>
-        <div class="form-group">
-          <label for="signup-password">Password</label>
-          <input type="password" id="signup-password" name="password" required placeholder="Create a password">
-        </div>
-        <button type="submit">Sign Up</button>
-      </form>
-    </div>
-  </div>
+  <h3>Create Article</h3>
+  <form id="createArticleForm">
+    Title: <input type="text" name="title" required><br>
+    Author: <input type="text" name="author" required><br>
+    Content: <textarea name="content" required></textarea><br>
+    Tags (comma separated): <input type="text" name="tags"><br>
+    <button type="submit">Create Article</button>
+  </form>
+
+  <h3>Update Article</h3>
+  <form id="updateArticleForm">
+    ID: <input type="text" name="id" required><br>
+    Title: <input type="text" name="title"><br>
+    Author: <input type="text" name="author"><br>
+    Content: <textarea name="content"></textarea><br>
+    Tags: <input type="text" name="tags"><br>
+    <button type="submit">Update Article</button>
+  </form>
+
+  <h3>Delete Article</h3>
+  <form id="deleteArticleForm">
+    ID: <input type="text" name="id" required>
+    <button type="submit">Delete Article</button>
+  </form>
+
+  <hr/>
+  <h2>Comments</h2>
+  <button onclick="fetchComments()">Fetch Comments</button>
+  <div id="commentsList"></div>
+
+  <h3>Create Comment</h3>
+  <form id="createCommentForm">
+    Article ID: <input type="text" name="article" required><br>
+    Body: <textarea name="body" required></textarea><br>
+    <button type="submit">Create Comment</button>
+  </form>
+
+  <h3>Update Comment</h3>
+  <form id="updateCommentForm">
+    ID: <input type="text" name="id" required><br>
+    Body: <textarea name="body" required></textarea><br>
+    <button type="submit">Update Comment</button>
+  </form>
+
+  <h3>Delete Comment</h3>
+  <form id="deleteCommentForm">
+    ID: <input type="text" name="id" required>
+    <button type="submit">Delete Comment</button>
+  </form>
+
+  <hr/>
+  <h2>Output / Response Log</h2>
+  <pre id="outputLog" style="background:#eee; padding:10px;"></pre>
 
   <script>
-    function switchTab(tab) {
-      const tabs = document.querySelectorAll('.tab');
-      const loginSection = document.getElementById('login-section');
-      const signupSection = document.getElementById('signup-section');
+    function logMessage(msg) {
+      document.getElementById('outputLog').textContent = typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg;
+    }
 
-      tabs.forEach(t => t.classList.remove('active'));
+    function getToken() {
+      return localStorage.getItem('token');
+    }
 
-      if (tab === 'login') {
-        tabs[0].classList.add('active');
-        loginSection.classList.add('active');
-        signupSection.classList.remove('active');
+    function getHeaders() {
+      const headers = { 'Content-Type': 'application/json' };
+      const token = getToken();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      return headers;
+    }
+
+    function checkStatus() {
+      if (getToken()) {
+        document.getElementById('status').innerText = 'Logged in.';
       } else {
-        tabs[1].classList.add('active');
-        signupSection.classList.add('active');
-        loginSection.classList.remove('active');
+        document.getElementById('status').innerText = 'Not logged in.';
       }
     }
+    
+    function logout() {
+      localStorage.removeItem('token');
+      checkStatus();
+      logMessage('Logged out.');
+    }
+
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = Object.fromEntries(fd.entries());
+      try {
+        const res = await fetch('/users/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const text = await res.text();
+        logMessage(text);
+      } catch(err) { logMessage(err.message); }
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = Object.fromEntries(fd.entries());
+      try {
+        const res = await fetch('/users/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (res.headers.get('content-type')?.includes('application/json')) {
+            const json = await res.json();
+            if (json.token) {
+                localStorage.setItem('token', json.token);
+                logMessage('Login successful. Token saved.');
+                checkStatus();
+            } else {
+                logMessage(json);
+            }
+        } else {
+            const text = await res.text();
+            logMessage(text);
+        }
+      } catch(err) { logMessage(err.message); }
+    });
+
+    async function fetchArticles() {
+      try {
+        const res = await fetch('/articles', { headers: getHeaders() });
+        const data = await res.json();
+        document.getElementById('articlesList').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        logMessage('Articles fetched');
+      } catch(err) { logMessage(err.message); }
+    }
+
+    document.getElementById('createArticleForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = Object.fromEntries(fd.entries());
+      if (data.tags) data.tags = data.tags.split(',').map(t => t.trim());
+      try {
+        const res = await fetch('/articles', {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify(data)
+        });
+        logMessage(await res.json());
+        fetchArticles();
+      } catch(err) { logMessage(err.message); }
+    });
+
+    document.getElementById('updateArticleForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = Object.fromEntries(fd.entries());
+      const id = data.id; delete data.id;
+      if (data.tags) data.tags = data.tags.split(',').map(t => t.trim());
+      else delete data.tags;
+      for (const key in data) if (data[key] === '') delete data[key];
+      try {
+        const res = await fetch('/articles/' + id, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify(data)
+        });
+        logMessage(await res.json());
+        fetchArticles();
+      } catch(err) { logMessage(err.message); }
+    });
+
+    document.getElementById('deleteArticleForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = new FormData(e.target).get('id');
+      try {
+        const res = await fetch('/articles/' + id, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
+        logMessage(await res.text() || 'Deleted article');
+        fetchArticles();
+      } catch(err) { logMessage(err.message); }
+    });
+
+    async function fetchComments() {
+      try {
+        const res = await fetch('/comments', { headers: getHeaders() });
+        const data = await res.json();
+        document.getElementById('commentsList').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        logMessage('Comments fetched');
+      } catch(err) { logMessage(err.message); }
+    }
+
+    document.getElementById('createCommentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      try {
+        const res = await fetch('/comments', {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify(data)
+        });
+        logMessage(await res.json());
+        fetchComments();
+      } catch(err) { logMessage(err.message); }
+    });
+
+    document.getElementById('updateCommentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = Object.fromEntries(fd.entries());
+      const id = data.id; delete data.id;
+      try {
+        const res = await fetch('/comments/' + id, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify(data)
+        });
+        logMessage(await res.json());
+        fetchComments();
+      } catch(err) { logMessage(err.message); }
+    });
+
+    document.getElementById('deleteCommentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = new FormData(e.target).get('id');
+      try {
+        const res = await fetch('/comments/' + id, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
+        logMessage(await res.text() || 'Deleted comment');
+        fetchComments();
+      } catch(err) { logMessage(err.message); }
+    });
+
+    checkStatus();
   </script>
 </body>
 </html>
