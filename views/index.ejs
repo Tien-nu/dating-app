@@ -145,7 +145,11 @@
         }
         const data = await res.json();
         if (Array.isArray(data)) {
-            document.getElementById('articlesList').innerHTML = '<ul>' + data.map(a => `<li><b>${a.title}</b> by ${a.author} (ID: ${a._id})</li>`).join('') + '</ul>';
+            if (data.length === 0) {
+                document.getElementById('articlesList').innerHTML = '<p style="color: #64748b; font-style: italic;">No articles found.</p>';
+            } else {
+                document.getElementById('articlesList').innerHTML = '<ul>' + data.map(a => `<li><b>${a.title}</b> by ${a.author} (ID: ${a._id})</li>`).join('') + '</ul>';
+            }
         } else {
             document.getElementById('articlesList').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
         }
@@ -210,7 +214,11 @@
         }
         const data = await res.json();
         if (Array.isArray(data)) {
-            document.getElementById('commentsList').innerHTML = '<ul>' + data.map(c => `<li>${c.body} (ID: ${c._id})</li>`).join('') + '</ul>';
+            if (data.length === 0) {
+                document.getElementById('commentsList').innerHTML = '<p style="color: #64748b; font-style: italic;">No comments found.</p>';
+            } else {
+                document.getElementById('commentsList').innerHTML = '<ul>' + data.map(c => `<li>${c.body} (ID: ${c._id})</li>`).join('') + '</ul>';
+            }
         } else {
             document.getElementById('commentsList').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
         }
