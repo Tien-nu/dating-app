@@ -3,14 +3,10 @@
 <head>
   <title><%= title %></title>
   <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </head>
 <body>
-  <h1>Frontend</h1>
-  <div id="status">Not logged in.</div>
-  <button onclick="logout()">Logout</button>
-  
-  <hr/>
-  <h2>Users</h2>
   <h3>Signup</h3>
   <form id="signupForm">
     Username: <input type="text" name="username" required>
@@ -79,13 +75,12 @@
     <button type="submit">Delete Comment</button>
   </form>
 
-  <hr/>
-  <h2>Output / Response Log</h2>
-  <pre id="outputLog" style="background:#eee; padding:10px;"></pre>
+
 
   <script>
     function logMessage(msg) {
-      document.getElementById('outputLog').textContent = typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg;
+      const text = typeof msg === 'object' ? JSON.stringify(msg) : msg;
+      Toastify({ text: text, duration: 3000, gravity: 'bottom', position: 'right', style: { background: '#3b82f6', color: 'white', borderRadius: '8px' } }).showToast();
     }
 
     function getToken() {
@@ -99,19 +94,7 @@
       return headers;
     }
 
-    function checkStatus() {
-      if (getToken()) {
-        document.getElementById('status').innerText = 'Logged in.';
-      } else {
-        document.getElementById('status').innerText = 'Not logged in.';
-      }
-    }
-    
-    function logout() {
-      localStorage.removeItem('token');
-      checkStatus();
-      logMessage('Logged out.');
-    }
+
 
     document.getElementById('signupForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -143,7 +126,6 @@
             if (json.token) {
                 localStorage.setItem('token', json.token);
                 logMessage('Login successful. Token saved.');
-                checkStatus();
             } else {
                 logMessage(json);
             }
@@ -158,7 +140,11 @@
       try {
         const res = await fetch('/articles', { headers: getHeaders() });
         const data = await res.json();
-        document.getElementById('articlesList').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        if (Array.isArray(data)) {
+            document.getElementById('articlesList').innerHTML = '<ul>' + data.map(a => `<li><b>${a.title}</b> by ${a.author} (ID: ${a._id})</li>`).join('') + '</ul>';
+        } else {
+            document.getElementById('articlesList').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
         logMessage('Articles fetched');
       } catch(err) { logMessage(err.message); }
     }
@@ -215,7 +201,11 @@
       try {
         const res = await fetch('/comments', { headers: getHeaders() });
         const data = await res.json();
-        document.getElementById('commentsList').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        if (Array.isArray(data)) {
+            document.getElementById('commentsList').innerHTML = '<ul>' + data.map(c => `<li>${c.body} (ID: ${c._id})</li>`).join('') + '</ul>';
+        } else {
+            document.getElementById('commentsList').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
         logMessage('Comments fetched');
       } catch(err) { logMessage(err.message); }
     }
@@ -263,7 +253,7 @@
       } catch(err) { logMessage(err.message); }
     });
 
-    checkStatus();
+
   </script>
 </body>
 </html>
