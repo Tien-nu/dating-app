@@ -76,9 +76,18 @@ app.use(function (err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  
+  // Return JSON for API routes or if the client explicitly accepts JSON
+  if (req.originalUrl.startsWith('/articles') || 
+      req.originalUrl.startsWith('/comments') || 
+      req.originalUrl.startsWith('/users') ||
+      req.accepts(['html', 'json']) === 'json') {
+      res.json({ error: err.message, status: err.status || 500 });
+  } else {
+      // render the error page for non-API routes
+      res.render('error');
+  }
 });
 
 module.exports = app;
